@@ -19,7 +19,10 @@ function publicPathResolver(resourcePath, context) {
 
 module.exports = {
   mode: 'development',
-  entry: prod ? './src/index.prod.ts' : './src/index.dev.ts',
+  entry: {
+    main: prod ? './src/index.prod.ts' : './src/index.dev.ts',
+    'pdf.worker': 'pdfjs-dist/build/pdf.worker.entry'
+  },
   module: {
     rules: [
       {
@@ -34,12 +37,10 @@ module.exports = {
         test: /\.(scss)?$/,
         use: [
           {
-            loader: 'file-loader',
-            options: {
-              publicPath: '/templates',
-              outputPath: 'templates',
-              name: '[path][name].[ext]',
-            },
+            loader: 'style-loader',
+          },
+          {
+            loader: 'css-loader',
           },
           {
             loader: 'sass-loader'
@@ -69,12 +70,14 @@ module.exports = {
     library: 'SimplePdfAnalyzer',
     libraryTarget: 'umd',
     path: path.resolve(__dirname, './dist'),
-    filename: 'simple-pdf-analyzer.min.js'
+    // filename: 'simple-pdf-analyzer.min.js'
   },
   devtool: 'eval-cheap-source-map',
   target: ['web', 'es5'],
-  optimization: {
-    minimize: true,
-    minimizer: [new TerserPlugin(), new CssMinimizerPlugin()],
-  },
+  ...prod ? {
+    optimization: {
+      minimize: true,
+      minimizer: [new TerserPlugin(), new CssMinimizerPlugin()],
+    },
+  } : {},
 };
