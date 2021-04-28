@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -26,6 +27,7 @@ class Node {
 
     if (this.type === ValueType.REF) {
       this.value = xref.fetch(value);
+      this.xref = this.value.xref;
     } else {
       this.value = value;
     }
@@ -41,8 +43,8 @@ class Node {
   }
 
   public getChildren(): Node[] {
+    const children: Node[] = [];
     if (this.hasChild) {
-      const children: Node[] = [];
       switch (this.type) {
         case ValueType.DICT:
           Object.entries(this.value._map).forEach(([key, value]) =>
@@ -61,10 +63,8 @@ class Node {
           });
           break;
       }
-      return children;
-    } else {
-      throw new Error('This node not expandable');
     }
+    return children;
   }
 }
 
@@ -132,6 +132,37 @@ function fileToArrayBuffer(file: File): Promise<Uint8Array> {
   });
 }
 
+function removeChilds(parent: any): void {
+  while (parent.lastChild) {
+    parent.removeChild(parent.lastChild);
+  }
+}
+
+function getVisualName(node: Node): string {
+  return `${node.name}, ${node.type}, ${node.hasChild ? '' : node.value}`;
+}
+
+function createDom(parent: any, node: Node) {
+  const $ul = document.createElement('ul');
+  node.getChildren().forEach((node) => {
+    const $li = document.createElement('li');
+    $li.textContent = getVisualName(node);
+    $ul.append($li);
+    if (node.hasChild) {
+      $li.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if ($li.children.length) {
+          $li.innerHTML = getVisualName(node);
+        } else {
+          createDom($li, node);
+        }
+      });
+    }
+  });
+  parent.append($ul);
+}
+
 root.addEventListener('dragenter', (e) => {
   e.preventDefault();
 });
@@ -151,7 +182,8 @@ root.addEventListener('drop', (e) => {
       .then((buffer) => {
         const dict = parseArrayBuffer(buffer);
         const node = new Node('root', dict, dict.xref);
-        console.log(node);
+        createDom(root, node);
+        console.log(node.getChildren()[4]);
       })
       .catch((e) => {
         console.error(e);
