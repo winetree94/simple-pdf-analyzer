@@ -20,8 +20,7 @@ function publicPathResolver(resourcePath, context) {
 module.exports = {
   mode: 'development',
   entry: {
-    main: prod ? './src/index.prod.ts' : './src/index.dev.ts',
-    'pdf.worker': 'pdfjs-dist/build/pdf.worker.entry'
+    main: './src/main.ts',
   },
   module: {
     rules: [
@@ -63,14 +62,14 @@ module.exports = {
     }),
     new HtmlWebpackPlugin({
       inject: 'body',
-      template: 'src/index.dev.html',
+      template: 'src/index.html',
     }),
   ],
   output: {
     library: 'SimplePdfAnalyzer',
     libraryTarget: 'umd',
-    path: path.resolve(__dirname, './dist'),
-    // filename: 'simple-pdf-analyzer.min.js'
+    path: path.resolve(__dirname, './docs'),
+    filename: 'simple-pdf-analyzer.min.js'
   },
   devtool: 'eval-cheap-source-map',
   target: ['web', 'es5'],

@@ -20,49 +20,52 @@ class Node {
   public value: any;
   public hasChild: boolean;
   public type: ValueType;
-  private xref: any;
+  static xref: any;
 
-  constructor(name: string, value: any, xref?: any) {
+  static registerXref(xref?: any) {
+    Node.xref = xref;
+  }
+
+  constructor(name: string, value: any) {
     this.type = getPdfValueType(value);
 
     if (this.type === ValueType.REF) {
-      this.value = xref.fetch(value);
-      this.xref = this.value.xref;
+      this.value = Node.xref.fetch(value);
     } else {
       this.value = value;
     }
 
+    this.type = getPdfValueType(this.value);
     this.name = name;
-    this.xref = xref;
 
     this.hasChild = [
       ValueType.DICT,
       ValueType.STREAM,
       ValueType.ARRAY,
     ].includes(this.type);
+    console.log(this);
   }
 
   public getChildren(): Node[] {
     const children: Node[] = [];
-    if (this.hasChild) {
-      switch (this.type) {
-        case ValueType.DICT:
-          Object.entries(this.value._map).forEach(([key, value]) =>
-            children.push(new Node(key, value, this.value.xref))
-          );
-          break;
-        case ValueType.STREAM:
-          Object.entries(this.value.dict._map).forEach(([key, value]) =>
-            children.push(new Node(key, value))
-          );
-          children.push(new Node('Stream', 'Contents'));
-          break;
-        case ValueType.ARRAY:
-          this.value.forEach((value: any, index: number) => {
-            children.push(new Node(index.toString(), value));
-          });
-          break;
-      }
+    switch (this.type) {
+      case ValueType.DICT:
+      case ValueType.REF:
+        Object.entries(this.value._map).forEach(([key, value]) =>
+          children.push(new Node(key, value))
+        );
+        break;
+      case ValueType.STREAM:
+        Object.entries(this.value.dict._map).forEach(([key, value]) =>
+          children.push(new Node(key, value))
+        );
+        children.push(new Node('Stream', 'Contents'));
+        break;
+      case ValueType.ARRAY:
+        this.value.forEach((value: any, index: number) => {
+          children.push(new Node(index.toString(), value));
+        });
+        break;
     }
     return children;
   }
@@ -132,33 +135,25 @@ function fileToArrayBuffer(file: File): Promise<Uint8Array> {
   });
 }
 
-function removeChilds(parent: any): void {
-  while (parent.lastChild) {
-    parent.removeChild(parent.lastChild);
-  }
-}
-
 function getVisualName(node: Node): string {
-  return `${node.name}, ${node.type}, ${node.hasChild ? '' : node.value}`;
+  return `${node.name}, (${node.type}), ${node.value}`;
 }
 
-function createDom(parent: any, node: Node) {
+function createDom(parent: HTMLElement, node: Node) {
   const $ul = document.createElement('ul');
   node.getChildren().forEach((node) => {
     const $li = document.createElement('li');
     $li.textContent = getVisualName(node);
     $ul.append($li);
-    if (node.hasChild) {
-      $li.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if ($li.children.length) {
-          $li.innerHTML = getVisualName(node);
-        } else {
-          createDom($li, node);
-        }
-      });
-    }
+    $li.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if ($li.children.length) {
+        $li.innerHTML = getVisualName(node);
+      } else {
+        createDom($li, node);
+      }
+    });
   });
   parent.append($ul);
 }
@@ -175,15 +170,14 @@ root.addEventListener('drop', (e) => {
   e.preventDefault();
   e.stopPropagation();
   if (e.dataTransfer && isPdf(e.dataTransfer.files[0])) {
-    console.log('passed');
+    root.innerHTML = '';
     const file = e.dataTransfer.files[0];
-
     fileToArrayBuffer(file)
       .then((buffer) => {
         const dict = parseArrayBuffer(buffer);
-        const node = new Node('root', dict, dict.xref);
+        Node.registerXref(dict.xref);
+        const node = new Node('root', dict);
         createDom(root, node);
-        console.log(node.getChildren()[4]);
       })
       .catch((e) => {
         console.error(e);

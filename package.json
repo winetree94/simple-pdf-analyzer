@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack serve",
+    "start": "webpack serve",
     "build": "tsc && cross-env NODE_ENV=production webpack"
   },
   "repository": {
@@ -22,6 +22,7 @@
     "cross-env": "^7.0.3",
     "css-loader": "^5.2.4",
     "css-minimizer-webpack-plugin": "^2.0.0",
+    "electron": "^12.0.5",
     "eslint": "^7.25.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-loader": "^4.0.2",
