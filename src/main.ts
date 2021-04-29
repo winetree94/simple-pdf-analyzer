@@ -20,13 +20,15 @@ class Node {
   public value: any;
   public hasChild: boolean;
   public type: ValueType;
+  public depth: number;
   static xref: any;
 
   static registerXref(xref?: any) {
     Node.xref = xref;
   }
 
-  constructor(name: string, value: any) {
+  constructor(name: string, value: any, depth: number) {
+    this.depth = depth;
     this.type = getPdfValueType(value);
 
     if (this.type === ValueType.REF) {
@@ -52,18 +54,12 @@ class Node {
       case ValueType.DICT:
       case ValueType.REF:
         Object.entries(this.value._map).forEach(([key, value]) =>
-          children.push(new Node(key, value))
+          children.push(new Node(key, value, this.depth + 1))
         );
-        break;
-      case ValueType.STREAM:
-        Object.entries(this.value.dict._map).forEach(([key, value]) =>
-          children.push(new Node(key, value))
-        );
-        children.push(new Node('Stream', 'Contents'));
         break;
       case ValueType.ARRAY:
         this.value.forEach((value: any, index: number) => {
-          children.push(new Node(index.toString(), value));
+          children.push(new Node(index.toString(), value, this.depth + 1));
         });
         break;
     }
@@ -141,6 +137,7 @@ function getVisualName(node: Node): string {
 
 function createDom(parent: HTMLElement, node: Node) {
   const $ul = document.createElement('ul');
+  $ul.classList.add(node.depth % 2 ? 'even' : 'odd');
   node.getChildren().forEach((node) => {
     const $li = document.createElement('li');
     $li.textContent = getVisualName(node);
@@ -176,7 +173,7 @@ root.addEventListener('drop', (e) => {
       .then((buffer) => {
         const dict = parseArrayBuffer(buffer);
         Node.registerXref(dict.xref);
-        const node = new Node('root', dict);
+        const node = new Node('root', dict, -1);
         createDom(root, node);
       })
       .catch((e) => {

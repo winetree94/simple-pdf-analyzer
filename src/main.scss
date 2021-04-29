@@ -12,14 +12,18 @@ body {
 ul {
   list-style: none;
   padding-left: 0px;
-  
-  li {
-    padding-left: 20px;
-  }
 
+  background-color: #FFFFFF;
+  &.odd {
+    background-color: #F4F4F4;
+  }
 }
 
 li {
   cursor: pointer;
+
+  li {
+    margin-left: 20px;
+  }
 }
 
