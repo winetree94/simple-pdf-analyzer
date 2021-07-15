@@ -4,6 +4,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const CopyPlugin = require("copy-webpack-plugin");
 
 const prod = process.env.NODE_ENV === 'production';
 
@@ -55,7 +56,17 @@ module.exports = {
     port: 9009,
   },
   plugins: [
-    new CleanWebpackPlugin(),
+    new CopyPlugin({
+      patterns: [
+        { from: "node_modules/pdfjs-dist/build/pdf.worker.min.js", to: "." },
+      ],
+      options: {
+        concurrency: 100,
+      },
+    }),
+    new CleanWebpackPlugin({
+      dangerouslyAllowCleanPatternsOutsideProject: true,
+    }),
     new MiniCssExtractPlugin({
       filename: './styles/[name].css',
       chunkFilename: '[id].css',

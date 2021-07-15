@@ -14,6 +14,9 @@ import {
   isName,
   RefSet,
 } from 'pdfjs-dist/lib/core/primitives';
+import * as PdfJS from 'pdfjs-dist';
+
+PdfJS.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 class Node {
   public name: string;
@@ -171,6 +174,13 @@ root.addEventListener('drop', (e) => {
     const file = e.dataTransfer.files[0];
     fileToArrayBuffer(file)
       .then((buffer) => {
+        PdfJS.getDocument(buffer)
+          .promise.then((res) => {
+            console.log(res);
+          })
+          .catch((err) => {
+            console.error(err);
+          });
         const dict = parseArrayBuffer(buffer);
         Node.registerXref(dict.xref);
         const node = new Node('root', dict, -1);
