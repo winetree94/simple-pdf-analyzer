@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -15,6 +16,8 @@ import {
   RefSet,
 } from 'pdfjs-dist/lib/core/primitives';
 import * as PdfJS from 'pdfjs-dist';
+
+const $canvas = document.getElementById('canvas-root') as HTMLCanvasElement;
 
 PdfJS.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
@@ -175,8 +178,31 @@ root.addEventListener('drop', (e) => {
     fileToArrayBuffer(file)
       .then((buffer) => {
         PdfJS.getDocument(buffer)
-          .promise.then((res) => {
-            console.log(res);
+          .promise.then((pdf) => {
+            pdf.getPage(1).then((page) => {
+              console.log('Page loaded');
+
+              const scale = 1.5;
+              const viewport = page.getViewport({ scale: scale });
+
+              // Prepare canvas using PDF page dimensions
+              const context = $canvas.getContext('2d');
+              $canvas.height = viewport.height;
+              $canvas.width = viewport.width;
+
+              // Render PDF page into canvas context
+              const renderContext = {
+                canvasContext: context,
+                viewport: viewport,
+              };
+              const renderTask = page.render({
+                canvasContext: context as any,
+                viewport: viewport,
+              });
+              renderTask.promise.then(() => {
+                console.log('Page rendered');
+              });
+            });
           })
           .catch((err) => {
             console.error(err);
