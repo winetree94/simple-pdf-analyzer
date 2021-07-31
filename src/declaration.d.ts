@@ -27,3 +27,10 @@ declare module 'pdfjs-dist/lib/core/primitives' {
   };
   export = module;
 }
+
+declare module 'pdfjs-dist/lib/shared/util' {
+  const module: {
+    stringToPDFString: (str: string) => string;
+  };
+  export = module;
+}
