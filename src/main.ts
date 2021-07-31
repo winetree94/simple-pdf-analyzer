@@ -16,6 +16,7 @@ import {
   RefSet,
 } from 'pdfjs-dist/lib/core/primitives';
 import * as PdfJS from 'pdfjs-dist';
+import { charCodeToChar, charToCharCode } from './string';
 
 const $canvas = document.getElementById('canvas-root') as HTMLCanvasElement;
 
@@ -43,6 +44,10 @@ class Node {
       this.value = value;
     }
 
+    if (this.type === ValueType.STRING && !isAscii(this.value)) {
+      this.value = stringToPDFString(this.value);
+    }
+
     this.type = getPdfValueType(this.value);
     this.name = name;
 
@@ -51,7 +56,6 @@ class Node {
       ValueType.STREAM,
       ValueType.ARRAY,
     ].includes(this.type);
-    console.log(this);
   }
 
   public getChildren(): Node[] {
@@ -84,6 +88,213 @@ export enum ValueType {
   NUM = 'num',
   BOOL = 'bool',
   STRING = 'string',
+}
+
+function isAscii(str: string) {
+  // eslint-disable-next-line no-control-regex
+  return /^[\x00-\x7F]*$/.test(str);
+}
+
+const PDFStringTranslateTable = [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0x2d8,
+  0x2c7,
+  0x2c6,
+  0x2d9,
+  0x2dd,
+  0x2db,
+  0x2da,
+  0x2dc,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0x2022,
+  0x2020,
+  0x2021,
+  0x2026,
+  0x2014,
+  0x2013,
+  0x192,
+  0x2044,
+  0x2039,
+  0x203a,
+  0x2212,
+  0x2030,
+  0x201e,
+  0x201c,
+  0x201d,
+  0x2018,
+  0x2019,
+  0x201a,
+  0x2122,
+  0xfb01,
+  0xfb02,
+  0x141,
+  0x152,
+  0x160,
+  0x178,
+  0x17d,
+  0x131,
+  0x142,
+  0x153,
+  0x161,
+  0x17e,
+  0,
+  0x20ac,
+];
+
+function stringToPDFString(str: string) {
+  const length = str.length,
+    strBuf = [];
+  if (str[0] === '\xFE' && str[1] === '\xFF') {
+    // UTF16BE BOM
+    for (let i = 2; i < length; i += 2) {
+      strBuf.push(
+        String.fromCharCode((str.charCodeAt(i) << 8) | str.charCodeAt(i + 1))
+      );
+    }
+  } else if (str[0] === '\xFF' && str[1] === '\xFE') {
+    // UTF16LE BOM
+    for (let i = 2; i < length; i += 2) {
+      strBuf.push(
+        String.fromCharCode((str.charCodeAt(i + 1) << 8) | str.charCodeAt(i))
+      );
+    }
+  } else {
+    for (let i = 0; i < length; ++i) {
+      const code = PDFStringTranslateTable[str.charCodeAt(i)];
+      strBuf.push(code ? String.fromCharCode(code) : str.charAt(i));
+    }
+  }
+  return strBuf.join('');
+}
+
+function stringToUTF16BEString(str: string) {
+  const buf = ['\xFE\xFF'];
+  for (let i = 0, ii = str.length; i < ii; i++) {
+    const char = str.charCodeAt(i);
+    buf.push(
+      String.fromCharCode((char >> 8) & 0xff),
+      String.fromCharCode(char & 0xff)
+    );
+  }
+  return buf.join('');
 }
 
 function getPdfValueType(value: any): ValueType {
