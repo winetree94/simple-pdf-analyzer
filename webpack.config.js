@@ -21,7 +21,7 @@ function publicPathResolver(resourcePath, context) {
 module.exports = {
   mode: 'development',
   entry: {
-    main: './src/main.ts',
+    main: './src/index.ts',
   },
   module: {
     rules: [
