@@ -31,6 +31,7 @@ declare module 'pdfjs-dist/lib/core/primitives' {
 declare module 'pdfjs-dist/lib/shared/util' {
   const module: {
     stringToPDFString: (str: string) => string;
+    isAscii: (str: string) => boolean;
   };
   export = module;
 }

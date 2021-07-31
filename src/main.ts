@@ -16,9 +16,7 @@ import {
   RefSet,
 } from 'pdfjs-dist/lib/core/primitives';
 import * as PdfJS from 'pdfjs-dist';
-import { stringToPDFString } from 'pdfjs-dist/lib/shared/util';
-
-const $canvas = document.getElementById('canvas-root') as HTMLCanvasElement;
+import { isAscii, stringToPDFString } from 'pdfjs-dist/lib/shared/util';
 
 PdfJS.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
@@ -88,11 +86,6 @@ export enum ValueType {
   NUM = 'num',
   BOOL = 'bool',
   STRING = 'string',
-}
-
-function isAscii(str: string) {
-  // eslint-disable-next-line no-control-regex
-  return /^[\x00-\x7F]*$/.test(str);
 }
 
 function getPdfValueType(value: any): ValueType {
@@ -186,36 +179,6 @@ root.addEventListener('drop', (e) => {
     const file = e.dataTransfer.files[0];
     fileToArrayBuffer(file)
       .then((buffer) => {
-        PdfJS.getDocument(buffer)
-          .promise.then((pdf) => {
-            pdf.getPage(1).then((page) => {
-              console.log('Page loaded');
-
-              const scale = 1.5;
-              const viewport = page.getViewport({ scale: scale });
-
-              // Prepare canvas using PDF page dimensions
-              const context = $canvas.getContext('2d');
-              $canvas.height = viewport.height;
-              $canvas.width = viewport.width;
-
-              // Render PDF page into canvas context
-              const renderContext = {
-                canvasContext: context,
-                viewport: viewport,
-              };
-              const renderTask = page.render({
-                canvasContext: context as any,
-                viewport: viewport,
-              });
-              renderTask.promise.then(() => {
-                console.log('Page rendered');
-              });
-            });
-          })
-          .catch((err) => {
-            console.error(err);
-          });
         const dict = parseArrayBuffer(buffer);
         Node.registerXref(dict.xref);
         const node = new Node('root', dict, -1);
@@ -226,5 +189,3 @@ root.addEventListener('drop', (e) => {
       });
   }
 });
-
-export const a = 3;
