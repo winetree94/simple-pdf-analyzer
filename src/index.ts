@@ -26,9 +26,9 @@ class Node {
   public hasChild: boolean;
   public type: ValueType;
   public depth: number;
-  static xref: any;
+  static xref: XRef;
 
-  static registerXref(xref?: any) {
+  static registerXref(xref: XRef) {
     Node.xref = xref;
   }
 
@@ -106,16 +106,16 @@ function getPdfValueType(value: any): ValueType {
   } else if (typeof value === 'number') {
     return ValueType.NUM;
   } else {
-    console.log(value);
     throw new Error('Unresolvable value type!');
   }
 }
 
 function parseArrayBuffer(data: Uint8Array): any {
-  const pdfManager = new LocalPdfManager(null, data).pdfDocument;
-  pdfManager.parseStartXRef();
-  pdfManager.parse();
-  const tree = pdfManager.xref.trailer;
+  const manager = new LocalPdfManager(null, data);
+  const pdfDocument = manager.pdfDocument;
+  pdfDocument.parseStartXRef();
+  pdfDocument.parse();
+  const tree = pdfDocument.xref.trailer;
   return tree;
 }
 
@@ -180,6 +180,7 @@ root.addEventListener('drop', (e) => {
     fileToArrayBuffer(file)
       .then((buffer) => {
         const dict = parseArrayBuffer(buffer);
+        console.log(dict);
         Node.registerXref(dict.xref);
         const node = new Node('root', dict, -1);
         createDom(root, node);

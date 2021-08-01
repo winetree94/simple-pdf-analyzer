@@ -1,21 +1,21 @@
-declare module '*.html' {
-  const url: string;
-  export = url;
-}
-
-declare module '*.scss' {
-  const url: string;
-  export = url;
-}
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 declare module 'pdfjs-dist/lib/core/pdf_manager' {
-  const module: { LocalPdfManager: any };
+  const module: {
+    LocalPdfManager: new (param1: null, param2: Uint8Array) => {
+      pdfDocument: {
+        parseStartXRef: () => void;
+        parse: () => void;
+        xref: XRef;
+      };
+    };
+  };
   export = module;
 }
 
 declare module 'pdfjs-dist/lib/core/primitives' {
   const module: {
-    Ref: new (num: number, gen: number) => any;
+    Ref: Ref;
     RefSet: new (parent?: any) => any;
     isDict: (obj: any) => boolean;
     isRef: (obj: any) => boolean;

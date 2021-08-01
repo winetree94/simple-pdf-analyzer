@@ -1,13 +1,15 @@
 {
-  "name": "markdown-editor",
+  "name": "simple-pdf-analyzer",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/main.js",
   "scripts": {
     "start": "webpack serve",
     "build:webpack": "cross-env NODE_ENV=production webpack",
-    "build:electron": "tsc --project tsconfig.electron.json",
+    "build:electron": "tsc --project tsconfig.electron.json && electron-builder",
     "electron": "electron ./dist/main.js"
+  },
+  "build": {
+    "appId": "simple-pdf-analyzer"
   },
   "author": "",
   "license": "ISC",
@@ -23,6 +25,8 @@
     "css-loader": "^5.2.4",
     "css-minimizer-webpack-plugin": "^2.0.0",
     "electron": "^13.1.7",
+    "electron-builder": "^22.11.7",
+    "electron-webpack": "^2.8.2",
     "eslint": "^7.25.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-loader": "^4.0.2",
@@ -34,7 +38,9 @@
     "http-server": "^0.12.3",
     "jest": "^26.6.3",
     "mini-css-extract-plugin": "^1.5.0",
+    "pdfjs-dist": "^2.9.359",
     "prettier": "^2.2.1",
+    "rimraf": "^3.0.2",
     "sass": "^1.32.11",
     "sass-loader": "^11.0.1",
     "style-loader": "^2.0.0",
@@ -44,8 +50,5 @@
     "webpack": "^5.35.1",
     "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.11.2"
-  },
-  "dependencies": {
-    "pdfjs-dist": "^2.9.359"
   }
 }

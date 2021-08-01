@@ -70,5 +70,5 @@
   },
   "include": [
     "./src/**/*"
-  ]
+, "electron/main.ts"  ]
 }
